@@ -1014,16 +1014,44 @@ void crypto_argon2i(u8       *hash,      u32 hash_size,
 //  Taken from Supercop's ref10 implementation.
 //  A bit bigger than TweetNaCl, over 4 times faster.
 
+#include <assert.h>
+
 // field element
-typedef i32 fe[10];
+typedef i32 fe[11];
 
-static void fe_0(fe h) {            FOR(i, 0, 10) h[i] = 0; }
-static void fe_1(fe h) { h[0] = 1;  FOR(i, 1, 10) h[i] = 0; }
+static void fe_0(fe h) {            FOR(i, 0, 10) h[i] = 0; h[10] = 1;}
+static void fe_1(fe h) { h[0] = 1;  FOR(i, 1, 10) h[i] = 0; h[10] = 1;}
 
-static void fe_copy(fe h,const fe f           ){FOR(i,0,10) h[i] =  f[i];      }
-static void fe_neg (fe h,const fe f           ){FOR(i,0,10) h[i] = -f[i];      }
-static void fe_add (fe h,const fe f,const fe g){FOR(i,0,10) h[i] = f[i] + g[i];}
-static void fe_sub (fe h,const fe f,const fe g){FOR(i,0,10) h[i] = f[i] - g[i];}
+static void fe_copy(fe h,const fe f)
+{
+    FOR(i,0,11) h[i] = f[i];
+}
+static void fe_neg (fe h,const fe f)
+{
+    assert(f[10] >= 0 && f[10] <= 3);
+    FOR(i,0,10) h[i] = -f[i];
+    h[10] = f[10];
+}
+static void fe_add (fe h,const fe f,const fe g)
+{
+    FOR(i,0,10) h[i] = f[i] + g[i];
+    int cf = f[10] == 0 ? 1 : f[10];
+    int cg = g[10] == 0 ? 1 : g[10];
+    assert(cf > 0);
+    assert(cg > 0);
+    assert(cf + cg <= 3);
+    h[10] = cf + cg;
+}
+static void fe_sub (fe h,const fe f,const fe g)
+{
+    FOR(i,0,10) h[i] = f[i] - g[i];
+    int cf = f[10] == 0 ? 1 : f[10];
+    int cg = g[10] == 0 ? 1 : g[10];
+    assert(cf > 0);
+    assert(cg > 0);
+    assert(cf + cg <= 3);
+    h[10] = cf + cg;
+}
 
 static void fe_cswap(fe f, fe g, int b)
 {
@@ -1032,6 +1060,9 @@ static void fe_cswap(fe f, fe g, int b)
         f[i] = f[i] ^ x;
         g[i] = g[i] ^ x;
     }
+    int c = f[10] > g[10] ? f[10] : g[10];
+    f[10] = c;
+    g[10] = c;
 }
 
 static void fe_ccopy(fe f, const fe g, int b)
@@ -1039,6 +1070,9 @@ static void fe_ccopy(fe f, const fe g, int b)
     FOR (i, 0, 10) {
         i32 x = (f[i] ^ g[i]) & -b;
         f[i] = f[i] ^ x;
+    }
+    if (g[10] > f[10]) {
+        f[10] = g[10];
     }
 }
 
@@ -1070,6 +1104,7 @@ static void fe_frombytes(fe h, const u8 s[32])
     i64 t8 =  load24_le(s + 26) << 4;
     i64 t9 = (load24_le(s + 29) & 8388607) << 2;
     FE_CARRY;
+    h[10] = 1;
 }
 
 static void fe_mul_small(fe h, const fe f, i32 g)
@@ -1080,6 +1115,7 @@ static void fe_mul_small(fe h, const fe f, i32 g)
     i64 t6 = f[6] * (i64) g;  i64 t7 = f[7] * (i64) g;
     i64 t8 = f[8] * (i64) g;  i64 t9 = f[9] * (i64) g;
     FE_CARRY;
+    h[10] = 1;
 }
 static void fe_mul121666(fe h, const fe f) { fe_mul_small(h, f, 121666); }
 
@@ -1135,6 +1171,7 @@ static void fe_mul(fe h, const fe f, const fe g)
     h[5]=(i32)h5;  h[6]=(i32)h6;  h[7]=(i32)h7;  h[8]=(i32)h8;  h[9]=(i32)h9; \
 
     CARRY;
+    h[10] = 1;
 }
 
 // we could use fe_mul() for this, but this is significantly faster
@@ -1169,6 +1206,7 @@ static void fe_sq(fe h, const fe f)
         +    f3_2*(i64)f6    + f4  *(i64)f5_2;
 
     CARRY;
+    h[10] = 1;
 }
 
 static void fe_sq2(fe h, const fe f)
