@@ -55,7 +55,11 @@
 #define MONOCYPHER_H
 
 #include <stddef.h>
+#ifndef __KERNEL__
 #include <stdint.h>
+#else
+#include <linux/types.h>
+#endif
 
 ////////////////////////
 /// Type definitions ///
