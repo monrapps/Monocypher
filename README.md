@@ -1,3 +1,6 @@
+[![TrustInSoft CI](https://ci.trust-in-soft.com/projects/LoupVaillant/Monocypher.svg?branch=master)](https://ci.trust-in-soft.com/projects/LoupVaillant/Monocypher)
+
+
 Monocypher (Developer Edition)
 ------------------------------
 
@@ -21,6 +24,29 @@ speed of [Libsodium][].
 
 [Libsodium]: https://libsodium.org
 [TweetNaCl]: https://tweetnacl.cr.yp.to/
+
+
+Features
+--------
+
+- [Authenticated Encryption][AEAD] with XChaCha20 and Poly1305
+  (RFC&nbsp;8439).
+- [Hashing][HASH] with BLAKE2b.
+- [Password Hashing][PWH] with Argon2i.
+- [Public Key Cryptography][PKC] with X25519 (key exchange).
+- [Public Key Signatures][PKS] with EdDSA (RFC 8032) and Ed25519.
+- [Steganography support][STEG] with Elligator&nbsp;2.
+- [OPRF and PAKE support][PAKE] with Elligator&nbsp;2 and scalar
+  inversion.
+
+[AEAD]: https://monocypher.org/manual/aead
+[HASH]: https://monocypher.org/manual/hash
+[PWH]:  https://monocypher.org/manual/argon2i
+[PKC]:  https://monocypher.org/manual/key_exchange
+[PKS]:  https://monocypher.org/manual/sign
+[STEG]: https://monocypher.org/manual/advanced/elligator
+[PAKE]: https://monocypher.org/manual/advanced/x25519_inverse
+
 
 Manual
 ------
@@ -132,21 +158,23 @@ Speed benchmark
 
     $ make speed
 
-This will give you an idea how fast Monocypher is on your machine.
-Make sure you run it on the target platform if performance is a
-concern.  If Monocypher is too slow, try Libsodium or NaCl.  If you're
-not sure, you can always switch later.
+This will give you an idea how fast Monocypher is on your machine.  Make
+sure you run it on the target platform if performance is a concern.  If
+Monocypher is too slow, try Libsodium.  If you're not sure, you can
+always switch later.
+
 
 Note: the speed benchmark currently requires the POSIX
 `clock_gettime()` function.
 
-There are similar benchmarks for Libsodium, TweetNaCl, LibHydrogen, and
-c25519:
+There are similar benchmarks for Libsodium, TweetNaCl, LibHydrogen,
+c25519, and ed25519-donna (the portable, 32-bit version):
 
     $ make speed-sodium
     $ make speed-tweetnacl
     $ make speed-hydrogen
     $ make speed-c25519
+    $ make speed-donna
 
 (The `speed-hydrogen` target assumes it has pkg-config installed. Try
 `make pkg-config-libhydrogen` as root if it is not.)
@@ -168,12 +196,17 @@ the `USE_ED25519` variable to link it to monocypher.a and monocypher.so:
 
     $ make USE_ED25519=true
 
+If you install Monocypher with the makefile, you also need that option
+to copy `monocypher-ed25519.h` automatically:
+
+    $ make install USE_ED25519=true
+
 Monocypher also has the `BLAKE2_NO_UNROLLING` preprocessor flag, which
 is activated by compiling monocypher.c with the `-DBLAKE2_NO_UNROLLING`
 option.
 
 The `-DBLAKE2_NO_UNROLLING` option is a performance tweak.  By default,
-Monocypher unrolls the Blake2b inner loop, because doing so is over 25%
+Monocypher unrolls the BLAKE2b inner loop, because doing so is over 25%
 faster on modern processors.  Some embedded processors however, run the
 unrolled loop _slower_ (possibly because of the cost of fetching 5KB of
 additional code).  If you're using an embedded platform, try this

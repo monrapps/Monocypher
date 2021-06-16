@@ -10,7 +10,7 @@
 .\"
 .\" Copyright (c) 2017-2019 Loup Vaillant
 .\" Copyright (c) 2017-2018 Michael Savage
-.\" Copyright (c) 2017, 2019-2020 Fabio Scotoni
+.\" Copyright (c) 2017, 2019-2021 Fabio Scotoni
 .\" All rights reserved.
 .\"
 .\"
@@ -40,7 +40,7 @@
 .\"
 .\" ----------------------------------------------------------------------------
 .\"
-.\" Written in 2017-2020 by Loup Vaillant, Michael Savage and Fabio Scotoni
+.\" Written in 2017-2021 by Loup Vaillant, Michael Savage and Fabio Scotoni
 .\"
 .\" To the extent possible under law, the author(s) have dedicated all copyright
 .\" and related neighboring rights to this software to the public domain
@@ -50,7 +50,7 @@
 .\" with this software.  If not, see
 .\" <https://creativecommons.org/publicdomain/zero/1.0/>
 .\"
-.Dd March 31, 2020
+.Dd June 11, 2021
 .Dt CRYPTO_SIGN 3MONOCYPHER
 .Os
 .Sh NAME
@@ -197,9 +197,9 @@ if (crypto_check(signature, pk, message, 10)) {
 .Xr crypto_lock 3monocypher ,
 .Xr intro 3monocypher
 .Sh STANDARDS
-These functions implement PureEdDSA with Curve25519 and Blake2b, as
+These functions implement PureEdDSA with Curve25519 and BLAKE2b, as
 described in RFC 8032.
-This is the same as Ed25519, with Blake2b instead of SHA-512.
+This is the same as Ed25519, with BLAKE2b instead of SHA-512.
 .Sh HISTORY
 The
 .Fn crypto_sign ,
@@ -208,20 +208,35 @@ and
 .Fn crypto_sign_public_key
 functions appeared in Monocypher 0.2.
 .Pp
+Starting with Monocypher 2.0.5, modified signatures abusing the inherent
+signature malleability property of EdDSA now cause a non-zero return
+value of
+.Fn crypto_check ;
+in prior versions, such signatures would be accepted.
+.Pp
 .Sy A critical security vulnerability
 that caused all-zero signatures to be accepted was introduced in
 Monocypher 0.3;
 it was fixed in Monocypher 1.1.1 and 2.0.4.
 .Sh SECURITY CONSIDERATIONS
 .Ss Signature malleability
-EdDSA signatures are not unique like cryptographic hashes.
-For any given public key and message, there are many possible valid
-signatures.
-Some of them require knowledge of the private key.
-Others only require knowledge of an existing signature.
-Observing a valid signature only proves that someone with knowledge of
-the private key signed the message at some point.
-Do not rely on any other security property.
+Signature malleability is the ability of an attacker to produce a valid
+signature with knowledge of only an existing signature and the public
+key.
+That is, given a message, a signature and a public key,
+an attacker could generate a new signature for the same message that
+is valid under the same public key.
+Monocypher prevents signature malleability by only accepting
+signatures in canonical form.
+.Pp
+On the other hand, EdDSA signatures are not unique like cryptographic
+hashes.
+The signing procedure is deterministic by specification and
+.Fn crypto_sign
+follows this specification.
+However, someone with the private key can generate arbitrarily many
+valid, canonical, different signatures of the same message.
+Because of this, never assume that signatures are unique.
 .Ss Fault injection and power analysis
 Fault injection (also known as glitching) and power analysis may be used
 to manipulate the resulting signature and recover the secret key in

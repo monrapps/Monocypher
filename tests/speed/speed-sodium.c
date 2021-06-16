@@ -83,7 +83,7 @@ static u64 authenticated(void)
     u8 mac[crypto_aead_xchacha20poly1305_ietf_ABYTES];
     RANDOM_INPUT(in   , SIZE);
     RANDOM_INPUT(key  ,   32);
-    RANDOM_INPUT(nonce,    8);
+    RANDOM_INPUT(nonce,   24);
 
     TIMING_START {
         crypto_aead_xchacha20poly1305_ietf_encrypt_detached(
@@ -168,7 +168,7 @@ static u64 edDSA_check(void)
 
     TIMING_START {
         if (crypto_sign_verify_detached(signature, message, 64, pk)) {
-            printf("Monocypher verification failed\n");
+            printf("Libsodium verification failed\n");
         }
     }
     TIMING_END;

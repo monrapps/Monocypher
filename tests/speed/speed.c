@@ -85,7 +85,7 @@ static u64 authenticated(void)
     u8 mac[  16];
     RANDOM_INPUT(in   , SIZE);
     RANDOM_INPUT(key  ,   32);
-    RANDOM_INPUT(nonce,    8);
+    RANDOM_INPUT(nonce,   24);
 
     TIMING_START {
         crypto_lock(mac, out, key, nonce, in, SIZE);
@@ -118,9 +118,9 @@ static u64 sha512(void)
 
 static u64 argon2i(void)
 {
-    u64    work_area[SIZE / 8];
-    u8     hash     [32];
-    size_t nb_blocks = SIZE / 1024;
+    u64 work_area[SIZE / 8];
+    u8  hash     [32];
+    u32 nb_blocks = (u32)(SIZE / 1024);
     RANDOM_INPUT(password,  16);
     RANDOM_INPUT(salt    ,  16);
 

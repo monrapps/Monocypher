@@ -1,3 +1,31 @@
+3.1.2
+-----
+2020/12/27
+
+- Addressed issues from Cure53's audit:
+  - MON-01-001: Clarified which CSPRNG to use on Darwin.
+  - MON-01-002: Won't fix (nonce handling is a core design decision).
+  - MON-01-004: Compared with Kleshni's implementation.
+  - MON-01-005: Split a dedicated "advanced" folder in the manual.
+- Quality assurance for 2^255-19 arithmetic (elliptic curves):
+  - Documented carry propagation.
+  - Enforced slightly safer invariants.
+- Improved the speed of EdDSA signature generation.
+- Made the vectors.h header more compact and easier to modify.
+- TIS-CI integration.
+- Added speed benchmark for ed25519-donna.
+- Documented lengths limits of `crypto_ietf_chacha20()`
+
+
+3.1.1
+-----
+2020/06/15
+
+- Various documentation fixes.
+- Fixed various compiler warnings.
+- Fixed some integer overflows (16-bit platforms only).
+
+
 3.1.0
 -----
 2020/04/03
